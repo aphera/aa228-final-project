@@ -2,34 +2,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 
-samples_per_second = 44100
+# samples_per_second = 44100
+samples_per_second = 200
 
-# position, samples per beat
-x = np.array([0.0, 0.0])
+# position, beats per minute
+x = np.array([0.0, 120.0])
 # Our transition function
 f = np.array(
     [[1.0, (1.0 / 60) / samples_per_second],
      [0.0, 1.0]]
 )
 f_t = f.transpose()
-# our convariance matrix
+# our covariance matrix
 p = np.array(
-    [[0.0, 1.0],
+    [[0.0, 0.0],
      [0.0, 0.0]]
 )
 # Q grows the covariance over time
+# Let's assume after a second we may have drifted by 16bpm
 q = np.array(
-    [[0.001, 0.001],
-     [0.001, 0.001]]
-)
+    [[1.0, 8.0],
+     [8.0, 16.0]]
+) / samples_per_second
 
 # Our observation function
 h = np.array([[1.2,2],[3,4],[5,6]])
 h_t = h.transpose()
 # Means of observations
 z = np.array([5.5,2,3])
-# The convariance of the observations
-r = np.array([[1,2,3],[4,5,6],[7,8,9]])
+# The covariance of the observations
+r = np.array([[1.1,2,3],[4,5,6],[7,8,9]])
 
 
 start = timer()
