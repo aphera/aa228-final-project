@@ -48,7 +48,9 @@ for i in range(0, samples_per_second * 200):
         h_t = h.transpose()
 
         k_prime = p.dot(h_t).dot(np.linalg.inv(h.dot(p).dot(h_t) + r))
-        x = x + k_prime.dot(z - h.dot(x))
+        new_x = x + k_prime.dot(z - h.dot(x))
+        learning_rate = max(16.0 / i, 16.0 / samples_per_second)
+        x = x + learning_rate * (new_x - x)
         p = p - k_prime.dot(h.dot(p))
         zs.append(z[0, 0])
     else:
