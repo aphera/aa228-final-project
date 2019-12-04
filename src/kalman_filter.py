@@ -1,11 +1,11 @@
+import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 
 # samples_per_second = 44100
 samples_per_second = 200
-
-transition_rate = (1.0 / 60) / samples_per_second
 
 # bpm
 x = np.array([[120.0]])
@@ -23,9 +23,12 @@ data = {
 
 observation_base_vector = np.array([0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0])
 
+transition_rate = (1.0 / 60) / samples_per_second
+
 def get_z(t, bpm_estimate):
-    position_at_current_bpm = (t * transition_rate * bpm_to_find) % 1.0
-    if position_at_current_bpm < transition_rate:
+    samples_per_beat = int(1 / ((bpm_to_find / 60) / samples_per_second))
+    sample_in_beat = (t % samples_per_beat)
+    if sample_in_beat == 0 or sample_in_beat == random.choice([0, samples_per_beat / 2]):
         time_since_last_beat = t - data["time_of_previous_beat"]
         data["time_of_previous_beat"] = t
         if time_since_last_beat:
