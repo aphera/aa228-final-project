@@ -8,25 +8,19 @@ samples_per_second = 200
 transition_rate = (1.0 / 60) / samples_per_second
 
 # bpm
-x = 120.0
+x = np.array([[120.0]])
 
 # our covariance matrix. After a second, we may stray by 16 bpm
-p = 16.0 / samples_per_second
+p = np.array([[0.01]])
 
 # Q grows the covariance over time
-# TODO refine this value
-q = 16.0
-
-
-r = 1.0 / samples_per_second
+q = 16.0 / samples_per_second
 
 bpm_to_find = 100.0
-
-time_delta = 1.0 / samples_per_second
-
 data = {
     "time_of_previous_beat": 0
 }
+
 
 def get_z(t):
     position_at_current_bpm = (t * transition_rate * bpm_to_find) % 1.0
@@ -34,57 +28,46 @@ def get_z(t):
         time_since_last_beat = t - data["time_of_previous_beat"]
         data["time_of_previous_beat"] = t
         if time_since_last_beat:
-            return 1 / (time_since_last_beat * transition_rate)
-    return 0
-    # return observation_base_vector * position_at_current_bpm
+            return np.array([[1.0]]) / (time_since_last_beat * transition_rate)
 
 
-def get_h(s):
-    return s
-    # return observation_base_vector * s
-
+r = np.array([[1.0]])
+h = np.array([[1.0]])
 
 xs = []
-ts = []
 zs = []
 ps = []
 
 start = timer()
 
-for i in range(0, samples_per_second * 30):
+for i in range(0, samples_per_second * 200):
     p = p + q
 
     z = get_z(i)
-    if z:
-        h = get_h(x)
+    if z is not None:
+        h_t = h.transpose()
 
-        k_prime = p / (p + r)
-        x = x + k_prime * (z - x)
-        p = (1 - k_prime) * p
-
-        # k_prime = p.dot(h_t).dot(np.linalg.inv(h.dot(p).dot(h_t) + r))
-        # x = (x + k_prime.dot(z - h.dot(x)))
-        # p = p - k_prime.dot(h.dot(p))
-        ps.append(p)
-        xs.append(x)
+        k_prime = p.dot(h_t).dot(np.linalg.inv(h.dot(p).dot(h_t) + r))
+        x = x + k_prime.dot(z - h.dot(x))
+        p = p - k_prime.dot(h.dot(p))
+        zs.append(z[0, 0])
+    else:
         zs.append(bpm_to_find)
+
+    ps.append(p[0, 0])
+    xs.append(x[0, 0])
 
 end = timer()
 print(f"Time took kalman filter {str(end - start)}")
 
-print(x)
+print(x[0,0])
 print(p)
 
-# plt.figure()
-# plt.plot(ts,'g-')
-
-# plt.figure()
-# plt.plot(xs,'b-')
-# plt.plot(zs,'r-')
-# # plt.plot(xs[-400:],'b-')
-# # plt.plot(zs[-400:],'r-')
-#
 plt.figure()
-plt.plot(ps,'y-')
+plt.plot(xs,'b-')
+plt.plot(zs,'r-')
+#
+# plt.figure()
+# plt.plot(ps,'y-')
 
 plt.show()
