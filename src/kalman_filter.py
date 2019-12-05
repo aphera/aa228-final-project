@@ -15,14 +15,13 @@ ps = []
 ts = []
 
 
-observation_base_vector_tuples = np.arange(0.25, 4.25, 0.25)
+observation_base_vector_tuples = np.arange(0.125, 4.25, 0.125)
 
 
 def find_z_in_vector_and_compute_r(observation_vector, bpm_estimate):
     idx = (np.abs(observation_vector - bpm_estimate)).argmin()
     z_bpm = observation_vector[idx]
-    diff = abs(bpm_estimate - z_bpm)
-    return np.array([[z_bpm]]), np.array([[1.0 + diff * diff]])
+    return np.array([[z_bpm]]), np.array([[1.0 + abs(bpm_estimate - z_bpm) * abs(bpm_estimate - z_bpm)]])
 
 
 def get_z_and_r(observation, bpm_estimate):
@@ -70,6 +69,27 @@ def calculate_beat():
 
 
 calculate_beat()
+
+
+error_vector = np.array([0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0])
+
+
+def calculate_error():
+    start = timer()
+    error = 0
+    samples = len(xs)
+    for i, x in enumerate(xs):
+        actual_bpm = ts[i]
+        # Overloading the meaning of this function but it gives us what we want
+        adjusted_estimate = find_z_in_vector_and_compute_r(error_vector * x, actual_bpm)[0][0, 0]
+        error += np.power(actual_bpm - adjusted_estimate, 2) / samples
+    end = timer()
+    print(f"Time took calculate error {str(end - start)}")
+    return error
+
+
+total_error = calculate_error()
+print(f"Error:\n{total_error}")
 
 plt.figure()
 # tempo at each step
