@@ -1,4 +1,5 @@
 from mido import MidiFile, tempo2bpm
+from timeit import default_timer as timer
 
 
 class Observation:
@@ -9,6 +10,7 @@ class Observation:
 
 
 def get_observations():
+    start = timer()
     midi_file = MidiFile("bwv988.mid")
     # midi_file = MidiFile("988-v25.mid")
     # midi_file = MidiFile("cs1-1pre.mid")
@@ -25,4 +27,6 @@ def get_observations():
             observations.append(Observation(seconds_since_last_beat, seconds_since_start, tempo))
             seconds_since_last_beat = 0
         seconds_since_last_beat += msg.time
+    end = timer()
+    print(f"Time took parse midi {str(end - start)}")
     return observations

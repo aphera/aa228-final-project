@@ -21,7 +21,7 @@ observation_base_vector_tuples = np.arange(0.125, 4.25, 0.125)
 def find_z_in_vector_and_compute_r(observation_vector, bpm_estimate):
     idx = (np.abs(observation_vector - bpm_estimate)).argmin()
     z_bpm = observation_vector[idx]
-    return np.array([[z_bpm]]), np.array([[1.0 + abs(bpm_estimate - z_bpm) * abs(bpm_estimate - z_bpm)]])
+    return z_bpm, 1.0 + abs(bpm_estimate - z_bpm) * abs(bpm_estimate - z_bpm)
 
 
 def get_z_and_r(observation, bpm_estimate):
@@ -41,18 +41,20 @@ def calculate_beat():
 
     # our covariance matrix
     p = np.array([[160.0]])
-
     # Q grows the covariance over time
     q_per_second = 16.0
 
-    observations = get_observations()
+    z = np.array([[0.0]])
+    r = np.array([[0.0]])
 
+    observations = get_observations()
     start = timer()
     for observation in observations:
         p = p + q_per_second * observation.seconds_since_last_beat
         z_and_r = get_z_and_r(observation, h.dot(x)[0, 0])
         if z_and_r is not None:
-            z, r = z_and_r
+            z[0,0] = z_and_r[0]
+            r[0,0] = z_and_r[1]
 
             k_prime = p.dot(h_t).dot(np.linalg.inv(h.dot(p).dot(h_t) + r))
             x = x + k_prime.dot(z - h.dot(x))
@@ -81,7 +83,7 @@ def calculate_error():
     for i, x in enumerate(xs):
         actual_bpm = ts[i]
         # Overloading the meaning of this function but it gives us what we want
-        adjusted_estimate = find_z_in_vector_and_compute_r(error_vector * x, actual_bpm)[0][0, 0]
+        adjusted_estimate = find_z_in_vector_and_compute_r(error_vector * x, actual_bpm)[0]
         error += np.power(actual_bpm - adjusted_estimate, 2) / samples
     end = timer()
     print(f"Time took calculate error {str(end - start)}")
