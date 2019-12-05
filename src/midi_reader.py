@@ -9,7 +9,8 @@ class Observation:
 
 
 def get_observations():
-    midi_file = MidiFile("cs1-1pre.mid")
+    midi_file = MidiFile("bwv988.mid")
+    # midi_file = MidiFile("cs1-1pre.mid")
     # midi_file = MidiFile("vs1-1ada.mid")
     tempo = 0
     seconds_since_last_beat = 0
@@ -19,7 +20,7 @@ def get_observations():
         seconds_since_start += msg.time
         if msg.type == "set_tempo":
             tempo = tempo2bpm(msg.tempo)
-        if msg.type == "note_on" and msg.velocity > 0:
+        if msg.type == "note_on" and msg.velocity > 0 and seconds_since_last_beat != 0:
             observations.append(Observation(seconds_since_last_beat, seconds_since_start, tempo))
             seconds_since_last_beat = 0
         seconds_since_last_beat += msg.time

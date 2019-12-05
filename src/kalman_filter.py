@@ -70,12 +70,17 @@ def calculate_beat():
 
 
 calculate_beat()
+
 plt.figure()
+# tempo at each step
 plt.plot(xs, 'b-')
+# observation at each step
+# plt.plot(zs, 'r-')
+# if known, actual tempo at each step
 plt.plot(ts, 'g-')
-plt.plot(zs, 'r-')
 
 # plt.figure()
+# variance at each step
 # plt.plot(ps[-4000:],'y-')
 
 plt.show()
