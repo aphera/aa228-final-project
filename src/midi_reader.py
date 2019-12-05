@@ -10,6 +10,7 @@ class Observation:
 
 def get_observations():
     midi_file = MidiFile("bwv988.mid")
+    # midi_file = MidiFile("988-v25.mid")
     # midi_file = MidiFile("cs1-1pre.mid")
     # midi_file = MidiFile("vs1-1ada.mid")
     tempo = 0

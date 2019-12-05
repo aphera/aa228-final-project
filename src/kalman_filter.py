@@ -36,7 +36,7 @@ def get_z_and_r(observation, bpm_estimate):
 
 def calculate_beat():
     # bpm
-    x = np.array([[120.0]])
+    x = np.array([[80.0]])
     h = np.array([[1.0]])
     h_t = h.transpose()
 
