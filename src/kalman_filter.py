@@ -19,17 +19,21 @@ q = 0.01 / samples_per_second
 
 data = {
     "time_of_previous_beat": 0,
-    "bpm_to_find": 100.0,
+    "bpm_to_find": 109.0,
 }
 
 observation_base_vector_tuples = np.arange(0.25, 4.25, 0.25)
 
 transition_rate = (1.0 / 60) / samples_per_second
 
+ds = []
 
 def find_z_in_vector_and_compute_r(observation_vector, bpm_estimate):
     idx = (np.abs(observation_vector - bpm_estimate)).argmin()
-    return np.array([[observation_vector[idx]]]), np.array([[16.0]])
+    z_bpm = observation_vector[idx]
+    diff = abs(bpm_estimate - z_bpm)
+    ds.append(diff)
+    return np.array([[z_bpm]]), np.array([[16 + diff * diff]])
 
 
 def z_activation(sample_in_beat, samples_per_beat):
@@ -76,13 +80,14 @@ for i in range(0, samples_per_second * 4000):
 end = timer()
 print(f"Time took kalman filter {str(end - start)}")
 
-print(x[0,0])
+print(x[0, 0])
 print(p)
 
 plt.figure()
-plt.plot(xs,'b-')
-# plt.plot(zs,'r-')
-#
+plt.plot(xs, 'b-')
+# plt.plot(ds, 'g-')
+# plt.plot(zs, 'r-')
+
 # plt.figure()
 # plt.plot(ps[-4000:],'y-')
 
