@@ -63,6 +63,24 @@ class KalmanFilterParameters:
         self.observation_weight_vector = np.ones(observation_scalar_vector.shape)
         self.observation_error_weight = observation_error_weight
 
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if isinstance(other, KalmanFilterParameters):
+            return self.q_per_second == other.q_per_second \
+                   and np.array_equal(self.observation_scalar_vector, other.observation_scalar_vector) \
+                   and np.array_equal(self.observation_weight_vector, other.observation_weight_vector) \
+                   and self.observation_error_weight == other.observation_error_weight
+        return False
+
+    def __hash__(self):
+        """Overrides the default implementation"""
+        return hash(tuple([
+            self.q_per_second,
+            tuple(self.observation_scalar_vector),
+            tuple(self.observation_weight_vector),
+            self.observation_error_weight
+        ]))
+
 
 def calculate_beat(state, k_f_p, observations, result_metrics=None):
     start = timer()
@@ -105,11 +123,6 @@ def calculate_error(result_metrics):
     return error
 
 
-os = get_observations()
-rm = ResultMetrics()
-calculate_beat(State(), KalmanFilterParameters(), os, rm)
-total_error = calculate_error(rm)
-print(f"Error:\n{total_error}")
 
 
 def plot_results(result_metrics):
@@ -130,5 +143,13 @@ def plot_results(result_metrics):
 
     plt.show()
 
+def test():
+    os = get_observations()
+    rm = ResultMetrics()
+    calculate_beat(State(), KalmanFilterParameters(), os, rm)
+    total_error = calculate_error(rm)
+    print(f"Error:\n{total_error}")
+    plot_results(rm)
 
-plot_results(rm)
+
+test()
