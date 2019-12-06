@@ -5,7 +5,7 @@ import jsonpickle
 from mido import MidiFile
 
 from kalman_filter import KalmanFilterParameters, calculate_beat, State, calculate_error, ResultMetrics, plot_results
-from midi_reader import get_observations
+from midi_reader import get_observations, get_observations_for_files_in_directory
 
 
 def define_possible_q(k_f_p, increment):
@@ -73,7 +73,8 @@ def coordinate_local_search():
     # midi_file = MidiFile("988-v25.mid")
     # midi_file = MidiFile("cs1-1pre.mid")
     # midi_file = MidiFile("vs1-1ada.mid")
-    observations = get_observations(MidiFile("bwv988.mid"))
+    # observations = get_observations(MidiFile("bwv988.mid"))
+    observations = get_observations_for_files_in_directory("Wtc2midi")
     check_observations = get_observations(MidiFile("vs1-1ada.mid"))
     file = open("parameters_1.txt", "r")
     k_f_p = jsonpickle.decode(file.read())

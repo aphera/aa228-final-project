@@ -1,3 +1,5 @@
+import os
+
 from mido import MidiFile, tempo2bpm
 from timeit import default_timer as timer
 
@@ -24,5 +26,15 @@ def get_observations(midi_file):
             seconds_since_last_beat = 0
         seconds_since_last_beat += msg.time
     end = timer()
-    # print(f"Time took parse midi {str(end - start)}")
+    print(f"Time took parse midi {str(end - start)}")
+    return observations
+
+
+def get_observations_for_files_in_directory(directory):
+    start = timer()
+    observations = []
+    for file in os.listdir(directory):
+        observations += get_observations(MidiFile(f"{directory}/{file}"))
+    end = timer()
+    print(f"Time took parse midi {str(end - start)}")
     return observations
