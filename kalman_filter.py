@@ -57,8 +57,8 @@ class State:
 class KalmanFilterParameters:
     def __init__(self,
                  q_per_second=16.0,
-                 observation_scalar_vector=np.arange(0.125, 4.25, 0.125),
-                 observation_error_weight=1.0
+                 observation_scalar_vector=np.arange(0.125, 2.25, 0.125),
+                 observation_error_weight=2.0
                  ):
         # Q grows the covariance over time
         self.q_per_second = q_per_second

@@ -34,7 +34,7 @@ def get_observations_for_files_in_directory(directory):
     start = timer()
     observations = []
     for file in os.listdir(directory):
-        observations += get_observations(MidiFile(f"{directory}/{file}"))
+        observations.append(get_observations(MidiFile(f"{directory}/{file}")))
     end = timer()
     print(f"Time took parse midi {str(end - start)}")
     return observations
