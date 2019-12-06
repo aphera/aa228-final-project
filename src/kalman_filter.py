@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
+
+from mido import MidiFile
+
 from src.midi_reader import get_observations
 
 
@@ -101,7 +104,7 @@ def calculate_beat(state, k_f_p, observations, result_metrics=None):
             result_metrics.ts.append(observation.actual_bpm)
 
     end = timer()
-    print(f"Time took kalman filter {str(end - start)}")
+    # print(f"Time took kalman filter {str(end - start)}")
 
 
 error_vector = np.array([0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0])
@@ -119,7 +122,7 @@ def calculate_error(result_metrics):
         adjusted_estimate = scaled_error_vector[idx]
         error += np.power(actual_bpm - adjusted_estimate, 2) / samples
     end = timer()
-    print(f"Time took calculate error {str(end - start)}")
+    # print(f"Time took calculate error {str(end - start)}")
     return error
 
 
@@ -144,7 +147,11 @@ def plot_results(result_metrics):
     plt.show()
 
 def test():
-    os = get_observations()
+    midi_file = MidiFile("bwv988.mid")
+    # midi_file = MidiFile("988-v25.mid")
+    # midi_file = MidiFile("cs1-1pre.mid")
+    # midi_file = MidiFile("vs1-1ada.mid")
+    os = get_observations(midi_file)
     rm = ResultMetrics()
     calculate_beat(State(), KalmanFilterParameters(), os, rm)
     total_error = calculate_error(rm)
@@ -152,4 +159,4 @@ def test():
     plot_results(rm)
 
 
-test()
+# test()

@@ -9,12 +9,8 @@ class Observation:
         self.actual_bpm = actual_bpm
 
 
-def get_observations():
+def get_observations(midi_file):
     start = timer()
-    midi_file = MidiFile("bwv988.mid")
-    # midi_file = MidiFile("988-v25.mid")
-    # midi_file = MidiFile("cs1-1pre.mid")
-    # midi_file = MidiFile("vs1-1ada.mid")
     tempo = 0
     seconds_since_last_beat = 0
     seconds_since_start = 0
@@ -28,5 +24,5 @@ def get_observations():
             seconds_since_last_beat = 0
         seconds_since_last_beat += msg.time
     end = timer()
-    print(f"Time took parse midi {str(end - start)}")
+    # print(f"Time took parse midi {str(end - start)}")
     return observations
