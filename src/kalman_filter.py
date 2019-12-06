@@ -80,8 +80,6 @@ def calculate_beat(b_p, observations, result_metrics=None):
 
     end = timer()
     print(f"Time took kalman filter {str(end - start)}")
-    print(b_p.x[0, 0])
-    print(b_p.p[0, 0])
 
 
 error_vector = np.array([0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0])
@@ -107,19 +105,24 @@ calculate_beat(BeatParameters(), observations, result_metrics)
 total_error = calculate_error(result_metrics)
 print(f"Error:\n{total_error}")
 
-plt.figure()
-# tempo at each step
-# plt.plot(result_metrics.xs, 'b-')
-# observation at each step
-# plt.plot(result_metrics.zs, 'r-')
-# if known, actual tempo at each step
-# plt.plot(result_metrics.ts, 'g-')
 
-# unique, counts = np.unique(np.array(result_metrics.ss), return_counts=True)
-# plt.plot(unique, counts)
+def plot_results(results_metrics):
+    plt.figure()
+    # tempo at each step
+    # plt.plot(result_metrics.xs, 'b-')
+    # observation at each step
+    # plt.plot(result_metrics.zs, 'r-')
+    # if known, actual tempo at each step
+    # plt.plot(result_metrics.ts, 'g-')
 
-# plt.figure()
-# variance at each step
-# plt.plot(ps[-4000:],'y-')
+    unique, counts = np.unique(np.array(result_metrics.ss), return_counts=True)
+    plt.plot(unique, counts)
 
-plt.show()
+    # plt.figure()
+    # variance at each step
+    # plt.plot(ps[-4000:],'y-')
+
+    plt.show()
+
+
+plot_results(result_metrics)
