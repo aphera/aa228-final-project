@@ -4,7 +4,7 @@ from timeit import default_timer as timer
 
 from mido import MidiFile
 
-from src.midi_reader import get_observations
+from midi_reader import get_observations
 
 
 class ResultMetrics:
@@ -126,8 +126,6 @@ def calculate_error(result_metrics):
     return error
 
 
-
-
 def plot_results(result_metrics):
     plt.figure()
     # tempo at each step
@@ -146,6 +144,7 @@ def plot_results(result_metrics):
 
     plt.show()
 
+
 def test():
     midi_file = MidiFile("bwv988.mid")
     # midi_file = MidiFile("988-v25.mid")
@@ -157,6 +156,5 @@ def test():
     total_error = calculate_error(rm)
     print(f"Error:\n{total_error}")
     plot_results(rm)
-
 
 # test()

@@ -3,9 +3,8 @@ from timeit import default_timer as timer
 
 from mido import MidiFile
 
-from src.kalman_filter import KalmanFilterParameters, calculate_beat, State, calculate_error, ResultMetrics, \
-    plot_results
-from src.midi_reader import get_observations
+from kalman_filter import KalmanFilterParameters, calculate_beat, State, calculate_error, ResultMetrics, plot_results
+from midi_reader import get_observations
 
 
 def define_possible_q(k_f_p, increment):
