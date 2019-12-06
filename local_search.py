@@ -75,7 +75,8 @@ def coordinate_local_search():
     # midi_file = MidiFile("vs1-1ada.mid")
     observations = get_observations(MidiFile("bwv988.mid"))
     check_observations = get_observations(MidiFile("vs1-1ada.mid"))
-    k_f_p = KalmanFilterParameters()
+    file = open("parameters.txt", "r")
+    k_f_p = jsonpickle.decode(file.read())
     print(f"Starting error:\n{1 / sample(k_f_p, observations)}")
     print(f"Starting check error:\n{1 / sample(k_f_p, check_observations)}")
 
@@ -104,5 +105,5 @@ print(1 / so_good)
 rm = ResultMetrics()
 calculate_beat(State(), b_k_f_p, os, rm)
 
-write_parameters(jsonpickle.encode(b_k_f_p), "parameters.txt")
+write_parameters(jsonpickle.encode(b_k_f_p), "parameters_1.txt")
 plot_results(rm)
