@@ -32,7 +32,7 @@ def define_possible_observation_weight_vector(k_f_p, increment):
     return possible_parameters
 
 
-def define_possible_parameters(k_f_p, increment):
+def define_new_parameters(k_f_p, increment):
     possible_parameters = []
     possible_parameters.append(define_possible_q(k_f_p, increment))
     possible_parameters.append(define_possible_observation_error_weight(k_f_p, increment))
@@ -60,8 +60,7 @@ def local_search(k_f_p, observations_list, check_observations, increment, max_it
     while (reward > previous_reward or steps_without_improvements < max_steps_without_improvements) and i < max_iterations:
         i += 1
         previous_reward = reward
-        possible_parameters = define_possible_parameters(k_f_p, increment) + define_possible_parameters(k_f_p,
-                                                                                                        -increment)
+        possible_parameters = define_new_parameters(k_f_p, increment) + define_new_parameters(k_f_p, -increment)
         random.shuffle(observations_list)
         for new_k_f_p in possible_parameters:
             new_reward = sample(new_k_f_p, list(itertools.chain.from_iterable(observations_list)))
@@ -85,7 +84,7 @@ def local_search(k_f_p, observations_list, check_observations, increment, max_it
     return k_f_p
 
 
-FILE_NAME = "k_f_p.txt"
+FILE_NAME = "k_f_p_small.txt"
 
 
 def write_parameters(parameters):
@@ -110,7 +109,7 @@ def coordinate_local_search():
     print(f"Starting error:\n{1 / sample(k_f_p, itertools.chain.from_iterable(observations))}")
     print(f"Starting check error:\n{1 / sample(k_f_p, check_observations)}")
 
-    best_k_f_p = local_search(k_f_p, observations, check_observations, 0.3, 15)
+    best_k_f_p = local_search(k_f_p, observations, check_observations, 0.1, 15)
 
     result_metrics = ResultMetrics()
     calculate_beat(State(), best_k_f_p, itertools.chain.from_iterable(observations), result_metrics)
