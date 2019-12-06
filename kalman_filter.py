@@ -29,7 +29,7 @@ def get_z_and_r(current_bpm_estimate, k_f_p, observation, result_metrics=None):
     idx = (np.abs(scaled_observation_vector - current_bpm_estimate)).argmin()
     if result_metrics:
         result_metrics.ss.append(idx)
-    z = scaled_observation_vector[idx]
+    z = scaled_observation_vector[idx] + np.random.normal(0, .01)
     r = k_f_p.observation_weight_vector[idx] + k_f_p.observation_error_weight * np.power(current_bpm_estimate - z, 2)
     return z, r
 
@@ -65,24 +65,6 @@ class KalmanFilterParameters:
         self.observation_scalar_vector = observation_scalar_vector
         self.observation_weight_vector = np.ones(observation_scalar_vector.shape)
         self.observation_error_weight = observation_error_weight
-
-    def __eq__(self, other):
-        """Overrides the default implementation"""
-        if isinstance(other, KalmanFilterParameters):
-            return self.q_per_second == other.q_per_second \
-                   and np.array_equal(self.observation_scalar_vector, other.observation_scalar_vector) \
-                   and np.array_equal(self.observation_weight_vector, other.observation_weight_vector) \
-                   and self.observation_error_weight == other.observation_error_weight
-        return False
-
-    def __hash__(self):
-        """Overrides the default implementation"""
-        return hash(tuple([
-            self.q_per_second,
-            tuple(self.observation_scalar_vector),
-            tuple(self.observation_weight_vector),
-            self.observation_error_weight
-        ]))
 
 
 def calculate_beat(state, k_f_p, observations, result_metrics=None):

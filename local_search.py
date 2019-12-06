@@ -84,7 +84,7 @@ def local_search(k_f_p, observations_list, check_observations, increment, max_it
     return k_f_p
 
 
-FILE_NAME = "k_f_p_small.txt"
+FILE_NAME = "k_f_p_noise.txt"
 
 
 def write_parameters(parameters):
