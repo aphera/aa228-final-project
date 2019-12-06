@@ -25,10 +25,11 @@ def get_z_and_r(observation, b_p, result_metrics=None):
     scaled_observation_vector = b_p.observation_scalar_vector * observed_bpm
     current_bpm_estimate = b_p.h.dot(b_p.x)[0, 0]
     idx = (np.abs(scaled_observation_vector - current_bpm_estimate)).argmin()
-    z_bpm = scaled_observation_vector[idx]
     if result_metrics:
         result_metrics.ss.append(idx)
-    return z_bpm, 1.0 + abs(current_bpm_estimate - z_bpm) * abs(current_bpm_estimate - z_bpm)
+    z = scaled_observation_vector[idx]
+    r = b_p.observation_weight_vector[idx] + b_p.observation_error_weight * np.power(current_bpm_estimate - z, 2)
+    return z, r
 
 
 class BeatParameters:
@@ -39,7 +40,8 @@ class BeatParameters:
                  q_per_second=16.0,
                  z=np.array([[0.0]]),
                  r=np.array([[0.0]]),
-                 observation_scalar_vector=np.arange(0.125, 4.25, 0.125)
+                 observation_scalar_vector=np.arange(0.125, 4.25, 0.125),
+                 observation_error_weight=1.0
                  ):
         # bpm
         self.x = x
@@ -55,6 +57,7 @@ class BeatParameters:
         self.r = r
         self.observation_scalar_vector = observation_scalar_vector
         self.observation_weight_vector = np.ones(observation_scalar_vector.shape)
+        self.observation_error_weight = observation_error_weight
 
 
 def calculate_beat(b_p, observations, result_metrics=None):
