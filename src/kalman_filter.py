@@ -3,33 +3,39 @@ import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 from src.midi_reader import get_observations
 
-# tempo at each step
-xs = []
-# pre slide matched observation at each step
-ss = []
-# observation at each step
-zs = []
-# variance at each step
-ps = []
-# if known, actual tempo at each step
-ts = []
+
+class ResultMetrics:
+    def __init__(self):
+        # tempo at each step
+        self.xs = []
+        # observation at each step
+        self.zs = []
+        # index of observation array chosen during observation
+        self.ss = []
+        # variance at each step
+        self.ps = []
+        # if known, actual tempo at each step
+        self.ts = []
+
 
 observation_base_vector_tuples = np.arange(0.125, 4.25, 0.125)
 
 
-def find_z_in_vector_and_compute_r(observation_vector, bpm_estimate):
+def find_z_in_vector_and_compute_r(observation_vector, bpm_estimate, result_metrics=None):
     idx = (np.abs(observation_vector - bpm_estimate)).argmin()
     z_bpm = observation_vector[idx]
+    if result_metrics:
+        result_metrics.ss.append(idx)
     return z_bpm, 1.0 + abs(bpm_estimate - z_bpm) * abs(bpm_estimate - z_bpm)
 
 
-def get_z_and_r(observation, bpm_estimate):
+def get_z_and_r(observation, bpm_estimate, result_metrics=None):
     if observation.seconds_since_last_beat == 0:
         return None
     observed_bpm = 60 / observation.seconds_since_last_beat
-    ss.append(observed_bpm)
-    ts.append(observation.actual_bpm)
-    return find_z_in_vector_and_compute_r(observation_base_vector_tuples * observed_bpm, bpm_estimate)
+    if result_metrics:
+        result_metrics.ts.append(observation.actual_bpm)
+    return find_z_in_vector_and_compute_r(observation_base_vector_tuples * observed_bpm, bpm_estimate, result_metrics)
 
 
 class BeatParameters:
@@ -55,12 +61,11 @@ class BeatParameters:
         self.r = r
 
 
-def calculate_beat(b_p):
-    observations = get_observations()
+def calculate_beat(b_p, observations, result_metrics=None):
     start = timer()
     for observation in observations:
         b_p.p = b_p.p + b_p.q_per_second * observation.seconds_since_last_beat
-        z_and_r = get_z_and_r(observation, b_p.h.dot(b_p.x)[0, 0])
+        z_and_r = get_z_and_r(observation, b_p.h.dot(b_p.x)[0, 0], result_metrics)
         if z_and_r is not None:
             b_p.z[0, 0] = z_and_r[0]
             b_p.r[0, 0] = z_and_r[1]
@@ -68,10 +73,10 @@ def calculate_beat(b_p):
             k_prime = b_p.p.dot(b_p.h_t).dot(np.linalg.inv(b_p.h.dot(b_p.p).dot(b_p.h_t) + b_p.r))
             b_p.x = b_p.x + k_prime.dot(b_p.z - b_p.h.dot(b_p.x))
             b_p.p = b_p.p - k_prime.dot(b_p.h.dot(b_p.p))
-            zs.append(b_p.z[0, 0])
-            xs.append(b_p.x[0, 0])
-
-        ps.append(b_p.p[0, 0])
+        if result_metrics:
+            result_metrics.zs.append(b_p.z[0, 0])
+            result_metrics.xs.append(b_p.x[0, 0])
+            result_metrics.ps.append(b_p.p[0, 0])
 
     end = timer()
     print(f"Time took kalman filter {str(end - start)}")
@@ -79,17 +84,15 @@ def calculate_beat(b_p):
     print(b_p.p[0, 0])
 
 
-calculate_beat(BeatParameters())
-
 error_vector = np.array([0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0])
 
 
-def calculate_error():
+def calculate_error(result_metrics):
     start = timer()
     error = 0
-    samples = len(xs)
-    for i, x in enumerate(xs):
-        actual_bpm = ts[i]
+    samples = len(result_metrics.xs)
+    for i, x in enumerate(result_metrics.xs):
+        actual_bpm = result_metrics.ts[i]
         # Overloading the meaning of this function but it gives us what we want
         adjusted_estimate = find_z_in_vector_and_compute_r(error_vector * x, actual_bpm)[0]
         error += np.power(actual_bpm - adjusted_estimate, 2) / samples
@@ -98,16 +101,22 @@ def calculate_error():
     return error
 
 
-total_error = calculate_error()
+observations = get_observations()
+result_metrics = ResultMetrics()
+calculate_beat(BeatParameters(), observations, result_metrics)
+total_error = calculate_error(result_metrics)
 print(f"Error:\n{total_error}")
 
 plt.figure()
 # tempo at each step
-plt.plot(xs, 'b-')
+# plt.plot(result_metrics.xs, 'b-')
 # observation at each step
-# plt.plot(zs, 'r-')
+# plt.plot(result_metrics.zs, 'r-')
 # if known, actual tempo at each step
-plt.plot(ts, 'g-')
+# plt.plot(result_metrics.ts, 'g-')
+
+# unique, counts = np.unique(np.array(result_metrics.ss), return_counts=True)
+# plt.plot(unique, counts)
 
 # plt.figure()
 # variance at each step
