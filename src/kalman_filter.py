@@ -18,30 +18,26 @@ class ResultMetrics:
         self.ts = []
 
 
-def get_z_and_r(observation, b_p, result_metrics=None):
+def get_z_and_r(current_bpm_estimate, k_f_p, observation, result_metrics=None):
     if observation.seconds_since_last_beat == 0:
         return None
     observed_bpm = 60 / observation.seconds_since_last_beat
-    scaled_observation_vector = b_p.observation_scalar_vector * observed_bpm
-    current_bpm_estimate = b_p.h.dot(b_p.x)[0, 0]
+    scaled_observation_vector = k_f_p.observation_scalar_vector * observed_bpm
     idx = (np.abs(scaled_observation_vector - current_bpm_estimate)).argmin()
     if result_metrics:
         result_metrics.ss.append(idx)
     z = scaled_observation_vector[idx]
-    r = b_p.observation_weight_vector[idx] + b_p.observation_error_weight * np.power(current_bpm_estimate - z, 2)
+    r = k_f_p.observation_weight_vector[idx] + k_f_p.observation_error_weight * np.power(current_bpm_estimate - z, 2)
     return z, r
 
 
-class BeatParameters:
+class State:
     def __init__(self,
                  x=np.array([[80.0]]),
                  h=np.array([[1.0]]),
                  p=np.array([[160.0]]),
-                 q_per_second=16.0,
                  z=np.array([[0.0]]),
                  r=np.array([[0.0]]),
-                 observation_scalar_vector=np.arange(0.125, 4.25, 0.125),
-                 observation_error_weight=1.0
                  ):
         # bpm
         self.x = x
@@ -49,33 +45,41 @@ class BeatParameters:
         self.h_t = h.transpose()
         # our covariance matrix
         self.p = p
-        # Q grows the covariance over time
-        self.q_per_second = q_per_second
         # observation
         self.z = z
         # observation covariance
         self.r = r
+
+
+class KalmanFilterParameters:
+    def __init__(self,
+                 q_per_second=16.0,
+                 observation_scalar_vector=np.arange(0.125, 4.25, 0.125),
+                 observation_error_weight=1.0
+                 ):
+        # Q grows the covariance over time
+        self.q_per_second = q_per_second
         self.observation_scalar_vector = observation_scalar_vector
         self.observation_weight_vector = np.ones(observation_scalar_vector.shape)
         self.observation_error_weight = observation_error_weight
 
 
-def calculate_beat(b_p, observations, result_metrics=None):
+def calculate_beat(state, k_f_p, observations, result_metrics=None):
     start = timer()
     for observation in observations:
-        b_p.p = b_p.p + b_p.q_per_second * observation.seconds_since_last_beat
-        z_and_r = get_z_and_r(observation, b_p, result_metrics)
+        state.p = state.p + k_f_p.q_per_second * observation.seconds_since_last_beat
+        z_and_r = get_z_and_r(state.h.dot(state.x)[0, 0], k_f_p, observation, result_metrics)
         if z_and_r is not None:
-            b_p.z[0, 0] = z_and_r[0]
-            b_p.r[0, 0] = z_and_r[1]
+            state.z[0, 0] = z_and_r[0]
+            state.r[0, 0] = z_and_r[1]
 
-            k_prime = b_p.p.dot(b_p.h_t).dot(np.linalg.inv(b_p.h.dot(b_p.p).dot(b_p.h_t) + b_p.r))
-            b_p.x = b_p.x + k_prime.dot(b_p.z - b_p.h.dot(b_p.x))
-            b_p.p = b_p.p - k_prime.dot(b_p.h.dot(b_p.p))
+            k_prime = state.p.dot(state.h_t).dot(np.linalg.inv(state.h.dot(state.p).dot(state.h_t) + state.r))
+            state.x = state.x + k_prime.dot(state.z - state.h.dot(state.x))
+            state.p = state.p - k_prime.dot(state.h.dot(state.p))
         if result_metrics:
-            result_metrics.xs.append(b_p.x[0, 0])
-            result_metrics.zs.append(b_p.z[0, 0])
-            result_metrics.ps.append(b_p.p[0, 0])
+            result_metrics.xs.append(state.x[0, 0])
+            result_metrics.zs.append(state.z[0, 0])
+            result_metrics.ps.append(state.p[0, 0])
             result_metrics.ts.append(observation.actual_bpm)
 
     end = timer()
@@ -103,7 +107,7 @@ def calculate_error(result_metrics):
 
 os = get_observations()
 rm = ResultMetrics()
-calculate_beat(BeatParameters(), os, rm)
+calculate_beat(State(), KalmanFilterParameters(), os, rm)
 total_error = calculate_error(rm)
 print(f"Error:\n{total_error}")
 
