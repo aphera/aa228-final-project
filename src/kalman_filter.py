@@ -14,7 +14,6 @@ ps = []
 # if known, actual tempo at each step
 ts = []
 
-
 observation_base_vector_tuples = np.arange(0.125, 4.25, 0.125)
 
 
@@ -33,45 +32,54 @@ def get_z_and_r(observation, bpm_estimate):
     return find_z_in_vector_and_compute_r(observation_base_vector_tuples * observed_bpm, bpm_estimate)
 
 
-def calculate_beat():
-    # bpm
-    x = np.array([[80.0]])
-    h = np.array([[1.0]])
-    h_t = h.transpose()
+class BeatParameters:
+    def __init__(self,
+                 x=np.array([[80.0]]),
+                 h=np.array([[1.0]]),
+                 p=np.array([[160.0]]),
+                 q_per_second=16.0,
+                 z=np.array([[0.0]]),
+                 r=np.array([[0.0]]),
+                 ):
+        # bpm
+        self.x = x
+        self.h = h
+        self.h_t = h.transpose()
+        # our covariance matrix
+        self.p = p
+        # Q grows the covariance over time
+        self.q_per_second = q_per_second
+        # observation
+        self.z = z
+        # observation covariance
+        self.r = r
 
-    # our covariance matrix
-    p = np.array([[160.0]])
-    # Q grows the covariance over time
-    q_per_second = 16.0
 
-    z = np.array([[0.0]])
-    r = np.array([[0.0]])
-
+def calculate_beat(b_p):
     observations = get_observations()
     start = timer()
     for observation in observations:
-        p = p + q_per_second * observation.seconds_since_last_beat
-        z_and_r = get_z_and_r(observation, h.dot(x)[0, 0])
+        b_p.p = b_p.p + b_p.q_per_second * observation.seconds_since_last_beat
+        z_and_r = get_z_and_r(observation, b_p.h.dot(b_p.x)[0, 0])
         if z_and_r is not None:
-            z[0,0] = z_and_r[0]
-            r[0,0] = z_and_r[1]
+            b_p.z[0, 0] = z_and_r[0]
+            b_p.r[0, 0] = z_and_r[1]
 
-            k_prime = p.dot(h_t).dot(np.linalg.inv(h.dot(p).dot(h_t) + r))
-            x = x + k_prime.dot(z - h.dot(x))
-            p = p - k_prime.dot(h.dot(p))
-            zs.append(z[0, 0])
-            xs.append(x[0, 0])
+            k_prime = b_p.p.dot(b_p.h_t).dot(np.linalg.inv(b_p.h.dot(b_p.p).dot(b_p.h_t) + b_p.r))
+            b_p.x = b_p.x + k_prime.dot(b_p.z - b_p.h.dot(b_p.x))
+            b_p.p = b_p.p - k_prime.dot(b_p.h.dot(b_p.p))
+            zs.append(b_p.z[0, 0])
+            xs.append(b_p.x[0, 0])
 
-        ps.append(p[0, 0])
+        ps.append(b_p.p[0, 0])
 
     end = timer()
     print(f"Time took kalman filter {str(end - start)}")
-    print(x[0, 0])
-    print(p[0, 0])
+    print(b_p.x[0, 0])
+    print(b_p.p[0, 0])
 
 
-calculate_beat()
-
+calculate_beat(BeatParameters())
 
 error_vector = np.array([0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0])
 
