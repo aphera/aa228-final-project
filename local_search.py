@@ -1,5 +1,6 @@
 import copy
 from timeit import default_timer as timer
+import jsonpickle
 
 from mido import MidiFile
 
@@ -51,8 +52,8 @@ def local_search(k_f_p, observations, check_observations, increment, max):
     while reward > previous_reward and i < max:
         i += 1
         previous_reward = reward
-        # possible_parameters = define_possible_parameters(k_f_p, increment) + define_possible_parameters(k_f_p, -increment)
-        possible_parameters = define_possible_parameters(k_f_p, increment)
+        possible_parameters = define_possible_parameters(k_f_p, increment) + define_possible_parameters(k_f_p, -increment)
+        # possible_parameters = define_possible_parameters(k_f_p, increment)
         for new_k_f_p in possible_parameters:
             new_reward = sample(new_k_f_p, observations)
             if new_reward > reward:
@@ -61,6 +62,7 @@ def local_search(k_f_p, observations, check_observations, increment, max):
         print(1 / reward)
         print(1 / sample(k_f_p, check_observations))
         print(k_f_p.observation_error_weight)
+        print()
     end = timer()
     print(f"Time took to local search {str(end - start)}")
     return reward, k_f_p
@@ -77,14 +79,19 @@ def coordinate_local_search():
     print(f"Starting error:\n{1 / sample(k_f_p, observations)}")
     print(f"Starting check error:\n{1 / sample(k_f_p, check_observations)}")
 
-    ok_reward, ok_k_f_p = local_search(k_f_p, observations, check_observations, 1000.0, 30)
+    ok_reward, ok_k_f_p = local_search(k_f_p, observations, check_observations, 1000.0, 5)
     print(f"Ok error:\n{1 / ok_reward}")
-    better_reward, better_k_f_p = local_search(ok_k_f_p, observations, check_observations, 100.0, 30)
+    better_reward, better_k_f_p = local_search(ok_k_f_p, observations, check_observations, 100.0, 5)
     print(f"Better error:\n{1 / better_reward}")
-    best_reward, best_k_f_p = local_search(better_k_f_p, observations, check_observations, 10.0, 30)
+    best_reward, best_k_f_p = local_search(better_k_f_p, observations, check_observations, 10.0, 5)
     print(f"Best error:\n{1 / best_reward}")
     print(best_k_f_p)
     return best_k_f_p
+
+
+def write_parameters(parameters, filename):
+    with open(filename, "w") as f:
+            f.write("{}\n".format(parameters))
 
 
 b_k_f_p = coordinate_local_search()
@@ -97,4 +104,5 @@ print(1 / so_good)
 rm = ResultMetrics()
 calculate_beat(State(), b_k_f_p, os, rm)
 
+write_parameters(jsonpickle.encode(b_k_f_p), "parameters.txt")
 plot_results(rm)
