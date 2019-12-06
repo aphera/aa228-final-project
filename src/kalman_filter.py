@@ -131,11 +131,11 @@ def calculate_error(result_metrics):
 def plot_results(result_metrics):
     plt.figure()
     # tempo at each step
-    plt.plot(result_metrics.xs, 'b-')
+    plt.plot(result_metrics.xs[20000:25000], 'b-')
     # observation at each step
     # plt.plot(result_metrics.zs, 'r-')
     # if known, actual tempo at each step
-    plt.plot(result_metrics.ts, 'g-')
+    plt.plot(result_metrics.ts[20000:25000], 'g-')
 
     # unique, counts = np.unique(np.array(result_metrics.ss), return_counts=True)
     # plt.plot(unique, counts)
