@@ -1,10 +1,13 @@
+import itertools
+
+import jsonpickle
 import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 
 from mido import MidiFile
 
-from midi_reader import get_observations
+from midi_reader import get_observations, get_observations_for_files_in_directory
 
 
 class ResultMetrics:
@@ -134,11 +137,17 @@ def test():
     # midi_file = MidiFile("988-v25.mid")
     # midi_file = MidiFile("cs1-1pre.mid")
     # midi_file = MidiFile("vs1-1ada.mid")
-    os = get_observations(midi_file)
+    # os = get_observations(midi_file)
+    observations = get_observations_for_files_in_directory("Wtc2midi")
+    os = itertools.chain.from_iterable(observations)
     rm = ResultMetrics()
-    calculate_beat(State(), KalmanFilterParameters(), os, rm)
+    file = open("k_f_p_noise.txt", "r")
+    lines = file.readlines()
+    k_f_p = jsonpickle.decode(lines[-1])
+    calculate_beat(State(), k_f_p, os, rm)
     total_error = calculate_error(rm)
     print(f"Error:\n{total_error}")
     plot_results(rm)
 
-# test()
+
+test()
