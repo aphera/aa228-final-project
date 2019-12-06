@@ -53,7 +53,7 @@ def sample(k_f_p, observations):
 def local_search(k_f_p, observations_list, check_observations, increment, max_iterations):
     start = timer()
     previous_reward = float("-inf")
-    reward = sample(k_f_p, itertools.chain.from_iterable(observations_list))
+    reward = sample(k_f_p, list(itertools.chain.from_iterable(observations_list)))
     i = 0
     steps_without_improvements = 0
     max_steps_without_improvements = 4
@@ -106,13 +106,13 @@ def coordinate_local_search():
     observations = get_observations_for_files_in_directory("Wtc2midi")
     check_observations = get_observations(MidiFile("bwv988.mid"))
 
-    print(f"Starting error:\n{1 / sample(k_f_p, itertools.chain.from_iterable(observations))}")
+    print(f"Starting error:\n{1 / sample(k_f_p, list(itertools.chain.from_iterable(observations)))}")
     print(f"Starting check error:\n{1 / sample(k_f_p, check_observations)}")
 
     best_k_f_p = local_search(k_f_p, observations, check_observations, 0.1, 15)
 
     result_metrics = ResultMetrics()
-    calculate_beat(State(), best_k_f_p, itertools.chain.from_iterable(observations), result_metrics)
+    calculate_beat(State(), best_k_f_p, list(itertools.chain.from_iterable(observations), result_metrics))
     plot_results(result_metrics)
 
 

@@ -139,7 +139,7 @@ def test():
     # midi_file = MidiFile("vs1-1ada.mid")
     # os = get_observations(midi_file)
     observations = get_observations_for_files_in_directory("Wtc2midi")
-    os = itertools.chain.from_iterable(observations)
+    os = list(itertools.chain.from_iterable(observations))
     rm = ResultMetrics()
     file = open("k_f_p_noise.txt", "r")
     lines = file.readlines()
@@ -150,4 +150,4 @@ def test():
     plot_results(rm)
 
 
-test()
+# test()
