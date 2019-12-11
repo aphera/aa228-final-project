@@ -112,7 +112,7 @@ def coordinate_local_search():
     best_k_f_p = local_search(k_f_p, observations, check_observations, 0.1, 15)
 
     result_metrics = ResultMetrics()
-    calculate_beat(State(), best_k_f_p, list(itertools.chain.from_iterable(observations), result_metrics))
+    calculate_beat(State(), best_k_f_p, list(itertools.chain.from_iterable(observations)), result_metrics)
     plot_results(result_metrics)
 
 
