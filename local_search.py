@@ -1,3 +1,4 @@
+import sys
 import copy
 import itertools
 import random
@@ -50,7 +51,7 @@ def sample(k_f_p, observations):
         return float("-inf")
 
 
-def local_search(k_f_p, observations_list, check_observations, increment, max_iterations):
+def local_search(file_name, k_f_p, observations_list, check_observations, increment, max_iterations):
     start = timer()
     previous_reward = float("-inf")
     reward = sample(k_f_p, list(itertools.chain.from_iterable(observations_list)))
@@ -78,30 +79,27 @@ def local_search(k_f_p, observations_list, check_observations, increment, max_it
         print(f"observation_error_weight:\n{k_f_p.observation_error_weight}")
         print(f"iteration: {i}")
         print()
-        write_parameters(k_f_p)
+        write_parameters(file_name, k_f_p)
     end = timer()
     print(f"Time took to local search {str(end - start)}")
     return k_f_p
 
 
-FILE_NAME = "k_f_p_noise.txt"
-
-
-def write_parameters(parameters):
-    with open(FILE_NAME, "a") as f:
+def write_parameters(file_name, parameters):
+    with open(file_name, "a") as f:
         f.write("{}\n".format(jsonpickle.encode(parameters)))
 
 
-def read_parameters_or_create_new():
-    file = open(FILE_NAME, "r")
+def read_parameters_or_create_new(file_name):
+    file = open(file_name, "r")
     lines = file.readlines()
     if lines:
         return jsonpickle.decode(lines[-1])
     return KalmanFilterParameters()
 
 
-def coordinate_local_search():
-    k_f_p = read_parameters_or_create_new()
+def coordinate_local_search(file_name, increment):
+    k_f_p = read_parameters_or_create_new(file_name)
     print(k_f_p.observation_weight_vector)
     observations = get_observations_for_files_in_directory("Wtc2midi")
     check_observations = get_observations(MidiFile("bwv988.mid"))
@@ -109,11 +107,20 @@ def coordinate_local_search():
     print(f"Starting error:\n{1 / sample(k_f_p, list(itertools.chain.from_iterable(observations)))}")
     print(f"Starting check error:\n{1 / sample(k_f_p, check_observations)}")
 
-    best_k_f_p = local_search(k_f_p, observations, check_observations, 0.1, 15)
+    best_k_f_p = local_search(file_name, k_f_p, observations, check_observations, increment, 15)
 
     result_metrics = ResultMetrics()
     calculate_beat(State(), best_k_f_p, list(itertools.chain.from_iterable(observations)), result_metrics)
     plot_results(result_metrics)
 
 
-coordinate_local_search()
+def main():
+    if len(sys.argv) != 3:
+        raise Exception("usage: pipenv run python local_search.py parameter_file increment")
+    file_name = sys.argv[1]
+    increment = float(sys.argv[2])
+    coordinate_local_search(file_name, increment)
+
+
+if __name__ == "__main__":
+    main()
